@@ -258,14 +258,14 @@ enum PriceService {
     static func clients(_ store: CredentialStore = .shared) -> [any PriceClient] {
         var list: [any PriceClient] = []
         if store.isYahooReady {
-            list.append(YahooClient(clientID: store.yahooClientID.trimmed))
+            list.append(YahooClient(clientID: store.effectiveYahooClientID))
         }
         if store.isRakutenReady {
             list.append(RakutenClient(
-                applicationID: store.rakutenApplicationID.trimmed,
-                accessKey: store.rakutenAccessKey.trimmed,
+                applicationID: store.effectiveRakutenApplicationID,
+                accessKey: store.effectiveRakutenAccessKey,
                 affiliateID: store.rakutenAffiliateID.trimmed,
-                referer: store.rakutenReferer.trimmed
+                referer: store.effectiveRakutenReferer
             ))
         }
         return list

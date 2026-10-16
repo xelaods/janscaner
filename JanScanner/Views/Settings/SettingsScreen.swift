@@ -40,8 +40,9 @@ struct SettingsScreen: View {
 
                 // Yahoo
                 Section {
-                    statusRow(.yahoo, ready: credentials.isYahooReady)
-                    KeyField(title: "Client ID", text: $credentials.yahooClientID)
+                    statusRow(.yahoo, ready: credentials.isYahooReady, builtIn: credentials.usesBuiltInYahoo)
+                    KeyField(title: "Client ID", text: $credentials.yahooClientID,
+                             placeholder: credentials.usesBuiltInYahoo ? "内蔵キーを使用中" : "未入力")
                     testButton(.yahoo, enabled: credentials.isYahooReady)
                 } header: {
                     Text("Yahoo!ショッピング")
@@ -54,7 +55,7 @@ struct SettingsScreen: View {
 
                 // 楽天
                 Section {
-                    statusRow(.rakuten, ready: credentials.isRakutenReady)
+                    statusRow(.rakuten, ready: credentials.isRakutenReady, builtIn: credentials.usesBuiltInRakuten)
                     KeyField(title: "アプリID", text: $credentials.rakutenApplicationID)
                     KeyField(title: "アクセスキー", text: $credentials.rakutenAccessKey)
                     KeyField(title: "登録したURL", text: $credentials.rakutenReferer, secure: false,
@@ -102,11 +103,11 @@ struct SettingsScreen: View {
         return "\(version) (\(build))"
     }
 
-    private func statusRow(_ source: Offer.Source, ready: Bool) -> some View {
+    private func statusRow(_ source: Offer.Source, ready: Bool, builtIn: Bool) -> some View {
         HStack {
             SourceBadge(source: source, compact: false)
             Spacer()
-            Label(ready ? "有効" : "未設定", systemImage: ready ? "checkmark.circle.fill" : "circle.dashed")
+            Label(ready ? (builtIn ? "有効（内蔵）" : "有効") : "未設定", systemImage: ready ? "checkmark.circle.fill" : "circle.dashed")
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(ready ? Theme.saving : Color.secondary)
         }

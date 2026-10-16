@@ -55,9 +55,18 @@ final class CredentialStore {
         rakutenReferer = UserDefaults.standard.string(forKey: "rakutenReferer") ?? ""
     }
 
-    var isYahooReady: Bool { !yahooClientID.trimmed.isEmpty }
+    // 自分で入力したキーを優先し、空ならアプリに内蔵されたキーを使う
+    var effectiveYahooClientID: String { yahooClientID.trimmed.isEmpty ? BuiltInKeys.yahooClientID : yahooClientID.trimmed }
+    var effectiveRakutenApplicationID: String { rakutenApplicationID.trimmed.isEmpty ? BuiltInKeys.rakutenApplicationID : rakutenApplicationID.trimmed }
+    var effectiveRakutenAccessKey: String { rakutenAccessKey.trimmed.isEmpty ? BuiltInKeys.rakutenAccessKey : rakutenAccessKey.trimmed }
+    var effectiveRakutenReferer: String { rakutenReferer.trimmed.isEmpty ? BuiltInKeys.rakutenReferer : rakutenReferer.trimmed }
+
+    var usesBuiltInYahoo: Bool { yahooClientID.trimmed.isEmpty && !BuiltInKeys.yahooClientID.isEmpty }
+    var usesBuiltInRakuten: Bool { rakutenApplicationID.trimmed.isEmpty && !BuiltInKeys.rakutenApplicationID.isEmpty }
+
+    var isYahooReady: Bool { !effectiveYahooClientID.isEmpty }
     var isRakutenReady: Bool {
-        !rakutenApplicationID.trimmed.isEmpty && !rakutenAccessKey.trimmed.isEmpty && !rakutenReferer.trimmed.isEmpty
+        !effectiveRakutenApplicationID.isEmpty && !effectiveRakutenAccessKey.isEmpty && !effectiveRakutenReferer.isEmpty
     }
     var hasAnySource: Bool { isYahooReady || isRakutenReady }
 

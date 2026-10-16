@@ -27,6 +27,24 @@ jobs:
           brew install xcodegen
           xcodegen generate
 
+      - name: APIキーを埋め込む
+        env:
+          YAHOO_CLIENT_ID: ${{ secrets.YAHOO_CLIENT_ID }}
+          RAKUTEN_APPLICATION_ID: ${{ secrets.RAKUTEN_APPLICATION_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          RAKUTEN_REFERER: ${{ secrets.RAKUTEN_REFERER }}
+        run: |
+          cat > JanScanner/Services/BuiltInKeys.swift <<SWIFT
+          import Foundation
+          enum BuiltInKeys {
+              static let yahooClientID = "${YAHOO_CLIENT_ID}"
+              static let rakutenApplicationID = "${RAKUTEN_APPLICATION_ID}"
+              static let rakutenAccessKey = "${RAKUTEN_ACCESS_KEY}"
+              static let rakutenReferer = "${RAKUTEN_REFERER}"
+          }
+          SWIFT
+          echo "Yahoo: $([ -n "$YAHOO_CLIENT_ID" ] && echo 内蔵 || echo なし) / 楽天: $([ -n "$RAKUTEN_APPLICATION_ID" ] && echo 内蔵 || echo なし)"
+
       - name: ビルド（署名なし）
         run: |
           xcodebuild \
