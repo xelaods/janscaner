@@ -1,0 +1,72 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ipa
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode のバージョン
+        run: xcodebuild -version
+
+      - name: XcodeGen でプロジェクト生成
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: ビルド（署名なし）
+        run: |
+          xcodebuild \
+            -project JanScanner.xcodeproj \
+            -scheme JanScanner \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build > build.log 2>&1 && status=0 || status=$?
+          grep -E "error:|BUILD (SUCCEEDED|FAILED)" build.log | head -100 || true
+          exit $status
+
+      - name: エラー内容を表示
+        if: failure()
+        run: grep -E "error:" -A3 build.log | head -150 || true
+
+      - name: ipa を作成
+        run: |
+          APP="build/Build/Products/Release-iphoneos/JanScanner.app"
+          test -d "$APP"
+          rm -rf Payload && mkdir Payload
+          cp -R "$APP" Payload/
+          zip -qry JanScanner.ipa Payload
+          ls -lh JanScanner.ipa
+
+      - name: Artifact として保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: JanScanner-ipa
+          path: JanScanner.ipa
+
+      - name: リリースに添付
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: 最安スキャン build ${{ github.run_number }}
+          body: "未署名の ipa です。お手持ちの証明書で署名してインストールしてください。"
+          files: JanScanner.ipa
+          make_latest: true
